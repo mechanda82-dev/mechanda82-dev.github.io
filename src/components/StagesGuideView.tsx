@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   ClipboardList, 
   ArrowRight, 
@@ -12,6 +12,7 @@ import {
   Scale
 } from 'lucide-react';
 import { PROCUREMENT_STAGES } from '../data/procurementData';
+import type { StagePrecedents } from '../data/stagePrecedents';
 import { ProcurementStage } from '../types/procurement';
 
 interface StagesGuideViewProps {
@@ -20,6 +21,25 @@ interface StagesGuideViewProps {
 
 export const StagesGuideView: React.FC<StagesGuideViewProps> = ({ onSelectMethod }) => {
   const [activeStage, setActiveStage] = useState<ProcurementStage>(PROCUREMENT_STAGES[0]);
+  const [precedentsByStage, setPrecedentsByStage] = useState<Record<string, StagePrecedents>>();
+  const [precedentsLoadFailed, setPrecedentsLoadFailed] = useState(false);
+  const stagePrecedents = precedentsByStage?.[activeStage.id];
+
+  useEffect(() => {
+    let cancelled = false;
+    import('../data/stagePrecedents')
+      .then(({ STAGE_PRECEDENTS }) => {
+        if (!cancelled) setPrecedentsByStage(STAGE_PRECEDENTS);
+      })
+      .catch((error: unknown) => {
+        console.error('Failed to load procurement opinions and PPRC decisions.', error);
+        if (!cancelled) setPrecedentsLoadFailed(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -157,6 +177,79 @@ export const StagesGuideView: React.FC<StagesGuideViewProps> = ({ onSelectMethod
               ))}
             </div>
           </div>
+
+          {stagePrecedents ? (
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+                <Scale className="w-4 h-4 text-indigo-600" />
+                <span>सम्बन्धित PPMO राय तथा PPRC निर्णयहरू:</span>
+              </h4>
+              <p className="text-xs text-slate-500 mb-3">
+                स्रोत डेटाका यस चरणसँग सम्बन्धित सबै राय र निर्णय समेटिएका छन्। कुनै शीर्षक खोल्दा पूरा विवरण हेर्नुहोस्।
+              </p>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {stagePrecedents.ppmoOpinions.length > 0 && (
+                  <section className="p-4 rounded-xl border border-blue-200 bg-blue-50/50">
+                    <h5 className="text-xs font-bold text-blue-900 mb-3 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      PPMO बाट प्राप्त राय ({stagePrecedents.ppmoOpinions.length})
+                    </h5>
+                    <div className="space-y-3">
+                      {stagePrecedents.ppmoOpinions.map((opinion) => (
+                        <details key={opinion.id} className="p-3 bg-white rounded-lg border border-blue-100">
+                          <summary className="cursor-pointer text-xs sm:text-sm font-semibold text-slate-900">
+                            राय मागिएको विषय: {opinion.question}
+                          </summary>
+                          <p className="text-xs sm:text-sm text-slate-700 mt-2 leading-relaxed">
+                            <span className="font-semibold text-blue-900">PPMO को राय: </span>
+                            {opinion.opinion}
+                          </p>
+                          <p className="text-[11px] text-slate-500 mt-2">{opinion.source}</p>
+                        </details>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {stagePrecedents.pprcDecisions.length > 0 && (
+                  <section className="p-4 rounded-xl border border-violet-200 bg-violet-50/50">
+                    <h5 className="text-xs font-bold text-violet-900 mb-3 flex items-center gap-2">
+                      <Scale className="w-4 h-4" />
+                      PPRC का विवाद र निर्णय ({stagePrecedents.pprcDecisions.length})
+                    </h5>
+                    <div className="space-y-3">
+                      {stagePrecedents.pprcDecisions.map((decision) => (
+                        <details key={decision.id} className="p-3 bg-white rounded-lg border border-violet-100">
+                          <summary className="cursor-pointer text-xs sm:text-sm font-semibold text-slate-900">
+                            विवाद: {decision.dispute}
+                          </summary>
+                          <p className="text-xs font-semibold text-violet-900 mt-2">निर्णयको प्रकार: {decision.result}</p>
+                          <p className="text-xs sm:text-sm text-slate-700 mt-2 leading-relaxed">
+                            <span className="font-semibold text-violet-900">समितिको निर्णय: </span>
+                            {decision.decision}
+                          </p>
+                          <p className="text-[11px] text-slate-500 mt-2">{decision.source}</p>
+                        </details>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p
+              role={precedentsLoadFailed ? 'alert' : 'status'}
+              className={`p-3 rounded-xl border text-sm ${
+                precedentsLoadFailed
+                  ? 'border-red-200 bg-red-50 text-red-800'
+                  : 'border-slate-200 bg-slate-50 text-slate-600'
+              }`}
+            >
+              {precedentsLoadFailed
+                ? 'PPMO राय तथा PPRC निर्णय लोड गर्न सकिएन। पृष्ठ पुनः लोड गरी प्रयास गर्नुहोस्।'
+                : 'PPMO राय तथा PPRC निर्णय लोड हुँदैछन्…'}
+            </p>
+          )}
         </div>
 
         {/* Footer Navigation */}
