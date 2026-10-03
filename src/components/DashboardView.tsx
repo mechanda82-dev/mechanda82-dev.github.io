@@ -104,16 +104,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner / Welcome with Quick Action */}
-      <div className="bg-gradient-to-r from-red-900 via-slate-900 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
+      <div className="bg-gradient-to-r from-red-900/80 via-slate-900 to-blue-900 text-white rounded-2xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
         <div className="relative z-10 max-w-3xl">
           <span className="text-red-400 font-semibold text-xs tracking-wider uppercase block mb-1">
-            नेपाल सरकार · सार्वजनिक निकाय खरिद अनुगमन तथा अनुपालन प्रणाली
+            खरिद विधि सहयोगी प्रणाली
           </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            खरिद प्रक्रिया व्यवस्थापन तथा अनुपालन ड्यासबोर्ड
+            सार्वजनिक खरिद प्रक्रिया सहयोगी ड्यासबोर्ड
           </h1>
           <p className="mt-2 text-slate-300 text-sm sm:text-base leading-relaxed">
-            सार्वजनिक खरिद ऐन, २०६३ र सार्वजनिक खरिद नियमावली, २०६४ (१६औँ संशोधन) बमोजिम कुनै पनि निर्माण, मालसामान वा सेवा खरिद गर्दा चरणबद्ध कानुनी प्रक्रिया, अख्तियारी, आवश्यक कागजात र चेकलिस्ट सुनिश्चित गर्नुहोस्।
+            सार्वजनिक खरिद ऐन, २०६३ र सार्वजनिक खरिद नियमावली, २०६४ (१६औँ संशोधन) बमोजिम कुनै पनि निर्माण, मालसामान वा सेवा खरिद गर्दा अपनाउनुपर्ने प्रक्रिया, कागजात र चेकलिस्ट।
           </p>
 
           <div className="mt-5 flex items-center gap-3 flex-wrap">

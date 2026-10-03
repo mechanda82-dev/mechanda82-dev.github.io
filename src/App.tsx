@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
+import { Sidebar } from './components/Sidebar';
 import { DashboardView } from './components/DashboardView';
 import { ProcurementMethodsView } from './components/ProcurementMethodsView';
 import { MethodChecklistsView } from './components/MethodChecklistsView';
@@ -22,6 +23,8 @@ import { ShieldCheck, BookOpen, ExternalLink, HelpCircle } from 'lucide-react';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
   const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const [isNewProjectOpen, setIsNewProjectOpen] = useState<boolean>(false);
   const [selectedMethodId, setSelectedMethodId] = useState<string | null>(null);
@@ -105,132 +108,139 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans">
       {/* Top Navigation */}
       <Header
-        activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenNewProject={() => setIsNewProjectOpen(true)}
+        isSidebarCollapsed={isSidebarCollapsed}
+        isMobileSidebarOpen={isMobileSidebarOpen}
+        onToggleSidebar={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
+        onToggleMobileSidebar={() => setIsMobileSidebarOpen((open) => !open)}
       />
 
-      {/* Main Viewport Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            projects={projects}
-            onUpdateProject={handleUpdateProject}
-            onOpenNewProjectModal={() => setIsNewProjectOpen(true)}
-            onSelectMethod={navigateToMethodWithId}
-            onSelectStage={() => setActiveTab('stages')}
+      <div className="flex flex-1 items-stretch">
+        <Sidebar
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          isCollapsed={isSidebarCollapsed}
+          isMobileOpen={isMobileSidebarOpen}
+          onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        />
+
+        <div className="flex min-w-0 flex-1 flex-col">
+          {/* Main Viewport Content */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+            {activeTab === 'dashboard' && (
+              <DashboardView
+                projects={projects}
+                onUpdateProject={handleUpdateProject}
+                onOpenNewProjectModal={() => setIsNewProjectOpen(true)}
+                onSelectMethod={navigateToMethodWithId}
+                onSelectStage={() => setActiveTab('stages')}
+              />
+            )}
+
+            {activeTab === 'methods' && (
+              <ProcurementMethodsView
+                initialSelectedMethodId={selectedMethodId}
+                onClearInitialMethod={() => setSelectedMethodId(null)}
+              />
+            )}
+
+            {activeTab === 'method-checklists' && (
+              <MethodChecklistsView
+                initialMethodId={selectedMethodId || undefined}
+                onNavigateToTemplate={navigateToTemplate}
+              />
+            )}
+
+            {activeTab === 'stages' && (
+              <StagesGuideView onSelectMethod={navigateToMethodWithId} />
+            )}
+
+            {activeTab === 'templates' && (
+              <TemplatesView
+                initialTemplateId={selectedTemplateId}
+                onSelectMethod={navigateToMethodWithId}
+              />
+            )}
+
+            {activeTab === 'checklists' && (
+              <ChecklistsView
+                onNavigateToMethodChecklists={() => setActiveTab('method-checklists')}
+              />
+            )}
+
+            {activeTab === 'calculator' && (
+              <CalculatorView onSelectMethod={navigateToMethodWithId} />
+            )}
+
+            {activeTab === 'clauses' && <LegalClausesView />}
+
+            {activeTab === 'schedules' && <SchedulesView />}
+          </main>
+
+          {/* Search & Multi-facet Filter Modal */}
+          <SearchAndFilterModal
+            isOpen={isSearchOpen}
+            onClose={() => setIsSearchOpen(false)}
+            onSelectResult={handleSelectSearchResult}
           />
-        )}
 
-        {activeTab === 'methods' && (
-          <ProcurementMethodsView
-            initialSelectedMethodId={selectedMethodId}
-            onClearInitialMethod={() => setSelectedMethodId(null)}
+          {/* Add New Procurement Project Modal */}
+          <NewProjectModal
+            isOpen={isNewProjectOpen}
+            onClose={() => setIsNewProjectOpen(false)}
+            onAddProject={handleAddProject}
           />
-        )}
 
-        {activeTab === 'method-checklists' && (
-          <MethodChecklistsView
-            initialMethodId={selectedMethodId || undefined}
-            onNavigateToTemplate={navigateToTemplate}
-          />
-        )}
+          {/* Official Legal Footer */}
+          <footer className="no-print mt-12 border-t border-slate-200 bg-white py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-md bg-red-700 text-white flex items-center justify-center font-bold text-xs">
+                  ख
+                </div>
+                <div>
+                  <span className="font-semibold text-slate-800">सार्वजनिक खरिद सहयोगी - नेपाल</span>
+                  <span className="block text-[11px] text-slate-400">
+                    सार्वजनिक खरिद ऐन, २०६३ तथा सार्वजनिक खरिद नियमावली, २०६४ (१६औँ संशोधन सम्म) मा आधारित।
+                  </span>
+                </div>
+              </div>
 
-        {activeTab === 'stages' && (
-          <StagesGuideView
-            onSelectMethod={navigateToMethodWithId}
-          />
-        )}
-
-        {activeTab === 'templates' && (
-          <TemplatesView
-            initialTemplateId={selectedTemplateId}
-            onSelectMethod={navigateToMethodWithId}
-          />
-        )}
-
-        {activeTab === 'checklists' && (
-          <ChecklistsView
-            onNavigateToMethodChecklists={() => setActiveTab('method-checklists')}
-          />
-        )}
-
-        {activeTab === 'calculator' && (
-          <CalculatorView
-            onSelectMethod={navigateToMethodWithId}
-          />
-        )}
-
-        {activeTab === 'clauses' && (
-          <LegalClausesView />
-        )}
-
-        {activeTab === 'schedules' && (
-          <SchedulesView />
-        )}
-      </main>
-
-      {/* Search & Multi-facet Filter Modal */}
-      <SearchAndFilterModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-        onSelectResult={handleSelectSearchResult}
-      />
-
-      {/* Add New Procurement Project Modal */}
-      <NewProjectModal
-        isOpen={isNewProjectOpen}
-        onClose={() => setIsNewProjectOpen(false)}
-        onAddProject={handleAddProject}
-      />
-
-      {/* Official Legal Footer */}
-      <footer className="bg-white border-t border-slate-200 mt-12 py-8 no-print">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-red-700 text-white flex items-center justify-center font-bold text-xs">
-              ख
+              <div className="flex items-center gap-4 text-xs">
+                <button
+                  onClick={() => setActiveTab('clauses')}
+                  className="transition-colors hover:text-red-700"
+                >
+                  कानुनी दफाहरू
+                </button>
+                <span>·</span>
+                <button
+                  onClick={() => setActiveTab('templates')}
+                  className="transition-colors hover:text-red-700"
+                >
+                  कागजात ढाँचाहरू
+                </button>
+                <span>·</span>
+                <button
+                  onClick={() => setActiveTab('calculator')}
+                  className="transition-colors hover:text-red-700"
+                >
+                  सीमा क्याल्कुलेटर
+                </button>
+                <span>·</span>
+                <button
+                  onClick={() => setActiveTab('schedules')}
+                  className="transition-colors hover:text-red-700"
+                >
+                  अनुसूचीहरू (१-८)
+                </button>
+              </div>
             </div>
-            <div>
-              <span className="font-semibold text-slate-800">सार्वजनिक खरिद सहयोगी - नेपाल</span>
-              <span className="block text-[11px] text-slate-400">
-                सार्वजनिक खरिद ऐन, २०६३ तथा सार्वजनिक खरिद नियमावली, २०६४ (१६औँ संशोधन सम्म) मा आधारित।
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 text-xs">
-            <button
-              onClick={() => setActiveTab('clauses')}
-              className="hover:text-red-700 transition-colors"
-            >
-              कानुनी दफाहरू
-            </button>
-            <span>·</span>
-            <button
-              onClick={() => setActiveTab('templates')}
-              className="hover:text-red-700 transition-colors"
-            >
-              कागजात ढाँचाहरू
-            </button>
-            <span>·</span>
-            <button
-              onClick={() => setActiveTab('calculator')}
-              className="hover:text-red-700 transition-colors"
-            >
-              सीमा क्याल्कुलेटर
-            </button>
-            <span>·</span>
-            <button
-              onClick={() => setActiveTab('schedules')}
-              className="hover:text-red-700 transition-colors"
-            >
-              अनुसूचीहरू (१-८)
-            </button>
-          </div>
+          </footer>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
